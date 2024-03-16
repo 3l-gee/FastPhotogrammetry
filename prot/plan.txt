@@ -1,0 +1,41 @@
+1) Understanding Depth Maps:
+ 	- Gain a clear understanding of what depth maps are and how they are typically generated from stereo image pairs. Depth maps represent the distance information of objects in a scene.
+
+2) Gather Stereo Image Pairs:
+	- Collect or generate a set of stereo image pairs. These are pairs of images of the same scene taken from slightly different viewpoints, simulating how human vision perceives depth through binocular vision.
+	
+3) Preprocessing:
+	- Load the stereo image pairs using OpenCV.
+	- Convert the images to grayscale if they are in color. Depth estimation is often done on grayscale images.
+	Ensure that the images are rectified. Rectification ensures that corresponding points in the left and right images lie on the same scanline.
+4) Feature Detection and Matching:
+	- Use feature detection algorithms (e.g., SIFT, SURF, ORB) to find key points in both images.
+	- Compute descriptors for these key points to describe their local neighborhoods.
+	- Match the keypoints between the left and right images based on their descriptors.
+
+5) Estimate Disparity:
+	- Using the matched keypoints, estimate the disparity between corresponding points in the left and right images.
+	- Disparity represents the apparent shift in position of an object between two images and is inversely proportional to depth.
+
+6) Compute Depth Map:
+	- Given the estimated disparity values, calculate the depth map.
+	- Depth can be computed using the formula: Depth = Baseline * FocalLength / Disparity
+	- Baseline: Distance between the camera centers.
+	- Focal Length: Focal length of the camera.
+	- Disparity: Disparity value for the corresponding pixel.
+
+7) Visualization and Evaluation:
+	- Visualize the depth map using OpenCV's visualization tools.
+	- Evaluate the accuracy of the depth map by comparing it with ground truth data if available.
+
+8) Refinement and Optimization:
+	- Experiment with different feature detectors, descriptors, and matching algorithms to improve the accuracy of the depth map.
+	- Optimize the code for efficiency, especially if working with large image datasets.
+
+9) User Interface (Optional):
+	- Develop a user interface to make the tool more user-friendly.
+	- Allow users to select stereo image pairs, visualize depth maps, and adjust parameters.
+
+10) Documentation and Testing:
+	- Document the code thoroughly, including explanations of algorithms and usage instructions.
+	- Test the tool extensively with various stereo image pairs to ensure robustness and accuracy.
