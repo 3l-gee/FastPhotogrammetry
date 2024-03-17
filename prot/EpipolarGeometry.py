@@ -2,10 +2,13 @@
 import numpy as np
 import cv2 as cv
 from matplotlib import pyplot as plt
+import os
 
+current_directory = os.getcwd()
+print("Current working directory:", current_directory)
 
-img1 = cv.imread('B_left.png', cv.IMREAD_GRAYSCALE)  #queryimage # left image
-img2 = cv.imread('B_right.png', cv.IMREAD_GRAYSCALE) #trainimage # right image
+img1 = cv.imread('img/PXL_20240317_082231220.jpg', cv.IMREAD_GRAYSCALE)  #queryimage # left image
+img2 = cv.imread('img/PXL_20240317_082234839.jpg', cv.IMREAD_GRAYSCALE) #trainimage # right image
  
 sift = cv.SIFT_create()
 
