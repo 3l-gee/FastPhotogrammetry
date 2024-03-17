@@ -7,7 +7,9 @@
 3) Preprocessing:
 	- Load the stereo image pairs using OpenCV.
 	- Convert the images to grayscale if they are in color. Depth estimation is often done on grayscale images.
-	Ensure that the images are rectified. Rectification ensures that corresponding points in the left and right images lie on the same scanline.
+	- Ensure that the images are rectified. Rectification ensures that corresponding points in the left and right images lie on the same scanline.
+		- can only be done in a test environement
+
 4) Feature Detection and Matching:
 	- Use feature detection algorithms (e.g., SIFT, SURF, ORB) to find key points in both images.
 	- Compute descriptors for these key points to describe their local neighborhoods.

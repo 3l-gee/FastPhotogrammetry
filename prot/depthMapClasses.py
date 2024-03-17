@@ -3,53 +3,75 @@ import cv2 as cv
 from matplotlib import pyplot as plt
 import configparser
 import uuid
+import exifread
 
 #Config Loader
 config = configparser.ConfigParser()
-config.read('config.ini')
+config.read('prot/config.ini')
 
-class imageBucket : 
-    def __init__ (self,pathList): 
+class ImageBucket : 
+    def __init__ (self,pathList, directory): 
         self.images = {}  # Initialize an empty list to store image objects
         for path in pathList:
-            id = uuid.uuid4()
-            new_image = image(path, id)  # Create an image object
+            fullPath = str(directory + "/" + path)
+            id = str(uuid.uuid4())
+            new_image = image(fullPath, id)  # Create an image object
             self.images[id] = new_image # Add the image object to the list
 
     def display_all_image(self) : 
         for id, image in self.images.items() : 
             image.display_image()
 
-class image: 
+class Image: 
     def __init__(self, path, id):
         self.id = id
         self.path = path
         self.load_image(path)
+        self.load_metadata(path)
 
     def load_image(self, path):
-        path = 'PXL_20240317_082231220.jpg'
-        raw_img = cv.imread(path, cv.IMREAD_GRAYSCALE)
-        self.img = raw_img
-        # self.process_image(raw_img)
-        # try:
-        #     raw_img = cv.imread('a.png', cv.IMREAD_GRAYSCALE)
-        #     if raw_img is None:
-        #         raise FileNotFoundError("Failed to load image.")
-        #     self.process_image(raw_img)
-        # except Exception as e:
-        #     print(f"Error loading image: {e}")
+        try:
+            raw_img = cv.imread(path, cv.IMREAD_GRAYSCALE)
+            if raw_img is None:
+                raise FileNotFoundError("Failed to load image.")
+            self.process_image(raw_img)
+        except Exception as e:
+            print(f"Error loading image: {e}")
+
+    def load_metadata(self, path):
+        with open(path, 'rb') as f:
+            tags = exifread.process_file(f)
+            self.img_metadata = {
+                'Camera Model': tags.get('Image Model'),
+                'Image Size': tags.get('Image ImageSize'),
+                'Exposure Time': tags.get('EXIF ExposureTime'),
+                'Aperture': tags.get('EXIF FNumber'),
+                'ISO': tags.get('EXIF ISOSpeedRatings'),
+                'Focal Length': tags.get('EXIF FocalLength'),
+            }
+            f.close()
 
     def process_image(self, raw_img):
         height, width = raw_img.shape[:2]
         size = min(height, width)
         start_x, start_y = (width - size) // 2, (height - size) // 2
         square_img = raw_img[start_y:start_y+size, start_x:start_x+size]
-        self.img = cv.resize(square_img, (500, 500), interpolation=cv.INTER_LINEAR)
+        self.img = cv.resize(square_img, (500,500), interpolation=cv.INTER_LINEAR)
 
     def display_image(self) :
         cv.imshow(self.id, self.img)
         cv.waitKey(0)
         cv.destroyAllWindows()
+
+
+class Camera :
+    def __init__(self, cameraSepecFile = config['camera']):
+        self.width = 
+        self.height =
+        self.hzResolution =
+        self.vzResolution =
+        self.BitDepth = 
+        self.focalLength =  
 
 
 

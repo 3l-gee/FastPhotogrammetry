@@ -7,8 +7,8 @@ import os
 current_directory = os.getcwd()
 print("Current working directory:", current_directory)
 
-img1 = cv.imread('img/PXL_20240317_082231220.jpg', cv.IMREAD_GRAYSCALE)  #queryimage # left image
-img2 = cv.imread('img/PXL_20240317_082234839.jpg', cv.IMREAD_GRAYSCALE) #trainimage # right image
+img1 = cv.imread('prot/img/PXL_20240317_082231220.jpg', cv.IMREAD_GRAYSCALE)  #queryimage # left image
+img2 = cv.imread('prot/img/PXL_20240317_082234839.jpg', cv.IMREAD_GRAYSCALE) #trainimage # right image
  
 sift = cv.SIFT_create()
 
