@@ -16,7 +16,9 @@ imageList1 = [
     'PXL_20240317_082324792.jpg',
     ]
 
-imageBucket1 = DMC.imageBucket(imageList1,directory)
+imageBucket1 = DMC.ImageBucket(imageList1,directory)
+
+imageBucket1.compute_all_descriptors()
 
 imageBucket1.display_all_image()
 
