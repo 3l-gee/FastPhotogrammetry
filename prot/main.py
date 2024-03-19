@@ -18,7 +18,13 @@ imageList1 = [
 
 imageBucket1 = DMC.ImageBucket(imageList1,directory)
 
-imageBucket1.compute_all_descriptors()
+imageBucket1.compute_all_descriptors("KAZE")
+
+imageBucket1.compute_all_descriptor_statistics()
+
+imageBucket1.filter_all_descriptor()
+
+imageBucket1.compute_all_descriptor_statistics()
 
 imageBucket1.display_all_image()
 
