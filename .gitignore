@@ -16,3 +16,6 @@ venv/
 
 #folder old
 old/
+
+#rust
+/target
