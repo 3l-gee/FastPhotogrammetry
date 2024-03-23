@@ -6,7 +6,7 @@ use lib::image::{Image, ImageProcessing};
 
 fn main() {
     // Load an image
-    let image_path = "img/PXL_20240317_082231220.jpg"; // Replace with the actual path to your image file
+    let image_path = "C:/Users/Raphael_Gerth/Documents/HOME/FUNTIMES_Rust/photogrametry/img/PXL_20240317_082231220.jpg"; // Replace with the actual path to your image file
     let image = match crate::Image::load(image_path) {
         Ok(image) => image,
         Err(err) => {
