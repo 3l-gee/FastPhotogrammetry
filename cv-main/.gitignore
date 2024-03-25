@@ -1,0 +1,13 @@
+# VS Code
+.vscode
+
+# Cargo
+/target
+**/*.rs.bk
+Cargo.lock
+
+# mdbook
+/tutorial/book/
+
+# MacOS
+.DS_Store
