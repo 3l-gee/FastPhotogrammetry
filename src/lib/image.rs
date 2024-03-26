@@ -2,6 +2,7 @@ use std::io::BufReader;
 use std::fs::File;
 use image::{self, DynamicImage};
 use std::path::Path;
+use uuid::Uuid;
 
 extern crate cv;
 
@@ -13,11 +14,12 @@ pub struct MetadataStruct {
  
 pub struct DescriptorStruct {
     pub keypoints : Vec<cv::feature::akaze::KeyPoint>,
-    pub descriptors : Vec<cv::BitArray<64>>,
+    pub descriptors : Vec<cv::bitarray::BitArray<64>>,
     pub method : String
 }
 
 pub struct ImageStruct {
+    pub id : Uuid,
     pub name : String,
     pub img_raw: image::DynamicImage,
     pub img_processed: Option<image::DynamicImage>,
@@ -26,22 +28,9 @@ pub struct ImageStruct {
     //TODO more Image parameters
 }
 
-pub trait ImageProcessing {
-    fn load(path: &str) -> Result<ImageStruct, String>;
-    fn info(&self);
-    fn grayscale(image_input: DynamicImage) -> Result<DynamicImage, image::ImageError>;
-    fn scale(image_input: DynamicImage) -> Result<DynamicImage, image::ImageError>;
-    fn save(&self) -> Result<(), String>;
-    fn show(&self);
-    fn process(&mut self);
-    fn compute(&mut self) -> Result<(), String>;
-    fn draw(&mut self) -> Result<(), String>; 
-}
-
-
-impl ImageProcessing for ImageStruct {
-    fn load(path: &str) -> Result<ImageStruct, String> {
-        let name = path.split("/").last().unwrap_or_default().to_string();
+impl ImageStruct {
+    pub fn load(path: &str) -> Result<ImageStruct, String> {
+        let name = Path::new(&path).file_name().unwrap().to_str().unwrap().to_string();
         // Load the image from the specified file path
         let file = match File::open(path) {
             Ok(file) => file,
@@ -68,6 +57,7 @@ impl ImageProcessing for ImageStruct {
 
         // Create the Image struct with loaded image data and metadata
         Ok(ImageStruct {
+            id: Uuid::new_v4(),
             name,
             img_raw: img,
             img_processed: None,
@@ -76,16 +66,38 @@ impl ImageProcessing for ImageStruct {
         })
     }
 
-    fn info(&self) {
+    pub fn info(&self) {
         println!("Image Name: {}", self.name);
         println!("Image Format: {:?}", self.img_raw.color());
         println!("Image Dimensions: {} x {}", self.img_raw.width(), self.img_raw.height());
+        
+        // Metadata information
         println!("Camera: {}", self.metadata.camera);
         println!("Focal Length: {}", self.metadata.focal);
+        
+        // Optional processed image information
+        if let Some(processed_image) = &self.img_processed {
+            println!("Processed Image Dimensions: {} x {}", processed_image.width(), processed_image.height());
+        } else {
+            println!("Processed Image: None");
+        }
+        
+        // Descriptor information, handling the Option
+        match &self.descriptor {
+            Some(descriptor) => {
+                println!("Descriptor Method: {}", descriptor.method);
+                println!("Number of Keypoints: {}", descriptor.keypoints.len());
+                println!("Number of Descriptors: {}", descriptor.descriptors.len());
+            },
+            None => println!("Descriptor: None"),
+        }
+        
         // Print more information as needed
+        // For example, if you add more fields to MetadataStruct or ImageStruct,
+        // add additional println! statements here following the patterns above.
     }
 
-    fn process(&mut self) {
+    pub fn process(&mut self) {
         
         match ImageStruct::scale(self.img_raw.clone()) {
             Ok(scaled_image) => {
@@ -100,8 +112,8 @@ impl ImageProcessing for ImageStruct {
         }
     }
 
-    fn compute(&mut self) -> Result<(), String> {
-        let akaze = cv::feature::akaze::Akaze::dense();
+    pub fn compute(&mut self) -> Result<(), String> {
+        let akaze = cv::feature::akaze::Akaze::default();
 
         // Ensure img_processed is Some; otherwise return an Err
         let image = match &self.img_processed {
@@ -126,11 +138,20 @@ impl ImageProcessing for ImageStruct {
         Ok(image.grayscale())
     }
 
-    fn scale(image : DynamicImage) -> Result<DynamicImage, image::ImageError> {
-        Ok(image.resize(500, 500,  image::imageops::FilterType::Nearest))
+    fn scale(image: DynamicImage) -> Result<DynamicImage, image::ImageError> {
+        let ratio = 0.5;
+        let original_width = image.width();
+        let original_height = image.height();
+    
+        // Calculate new dimensions based on the provided ratio
+        let new_width = (original_width as f32 * ratio) as u32;
+        let new_height = (original_height as f32 * ratio) as u32;
+    
+        // Resize the image using the new dimensions
+        Ok(image.resize(new_width, new_height, image::imageops::FilterType::Triangle))
     }
 
-    fn draw(&mut self) -> Result<(), String> {  
+    pub fn draw(&mut self) -> Result<(), String> {  
         let descriptor = match &self.descriptor {
             Some(descriptor) => descriptor,
             None => return Err("descriptor is None".to_string()),
@@ -141,34 +162,36 @@ impl ImageProcessing for ImageStruct {
             None => return Err("img_processed is None".to_string()),
         };
 
-        for keypoint in descriptor.keypoints {
-            let (x, y) = (keypoint.pt.x as i32, keypoint.pt.y as i32);
-            cv::
-            
-            
-            image::imageproc::drawing::draw_cross_mut(
-                &mut image,
+        let mut image_canvas = cv::image::imageproc::drawing::Blend(image.to_rgba8());
+
+        for keypoint in &descriptor.keypoints {
+            let (x, y) = (keypoint.point.0 as i32, keypoint.point.1 as i32);
+            cv::image::imageproc::drawing::draw_cross_mut(
+                &mut image_canvas,
                 image::Rgba([0, 255, 255, 128]),
                 x,
                 y,
             );
             
         }
+        let out_image = DynamicImage::ImageRgba8(image_canvas.0);
+
+        self.img_processed = Some(out_image);
+
         Ok(())
     }
 
-    fn show(){
 
-    }
-
-    fn save(&self) -> Result<(), String> {
-        let output_path = Path::new("C:/Users/Raphael_Gerth/Documents/HOME/FUNTIMES_Rust/photogrametry/output").join("test.png");
-
+    pub fn save(&self) -> Result<(), String> {
+        let output_name = self.name.clone();
+        output_name.splitn(2, ".").next().unwrap_or("");
+        let output_path = Path::new("C:/Users/Raphael_Gerth/Documents/HOME/FUNTIMES_Rust/photogrametry/output").join(output_name).with_extension("png");
+        println!("Image saved at {}", output_path.display());
         match &self.img_processed {
             Some(image) => {
                 match image.save_with_format(output_path, image::ImageFormat::Png) {
                     Ok(_) => Ok(()),
-                    Err(e) => Err(format!("Failed to save image: {}", e)),
+                    Err(e) => Err(format!("Failed to save image : {}", e)),
                 }
 
             },

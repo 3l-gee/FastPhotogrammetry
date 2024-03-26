@@ -7,7 +7,13 @@ edition = "2021"
 
 [dependencies]
 image = "0.24.1"
-cv = { path = "cv-main" }
+cv = { path = "cv-main/cv" }
+
+[dependencies.uuid]
+version = "1.8.0"
+features = [
+    "v4"
+]
 
 [profile.dev]
 opt-level = 0

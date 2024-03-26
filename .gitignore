@@ -19,3 +19,4 @@ old/
 
 #rust
 /target
+/output
