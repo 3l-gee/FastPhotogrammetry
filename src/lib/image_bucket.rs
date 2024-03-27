@@ -75,7 +75,7 @@ impl ImageBucketStruct {
 
     pub fn add_load_images(&mut self, path: &Path, image_name_list: Vec<String>){
         for image_name in image_name_list {
-            let image_name_cleaned = image_name.replace("\\", "/");  // Replace backslashes with forward slashes
+            let image_name_cleaned = image_name.replace('\\', "/");  // Replace backslashes with forward slashes
             let full_path = path.join(&image_name_cleaned);
             match ImageStruct::load(full_path.to_str().expect("Invalid path")) {
                 Ok(image) => {

@@ -191,7 +191,7 @@ impl ImageStruct {
 
     pub fn save(&self) -> Result<(), String> {
         let output_name = self.name.clone();
-        output_name.splitn(2, ".").next().unwrap_or("");
+        output_name.split('.');
         let output_path = Path::new("../../output").join(output_name).with_extension("png");
         println!("Image saved at {}", output_path.display());
         match &self.img_processed {
