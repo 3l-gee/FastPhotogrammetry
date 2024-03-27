@@ -1,8 +1,12 @@
+use super::image_bucket::ScalingFilter;
+use super::image_bucket::AkazeType;
+
 use std::io::BufReader;
 use std::fs::File;
 use image::{self, DynamicImage};
 use std::path::Path;
 use uuid::Uuid;
+
 
 extern crate cv;
 
@@ -14,8 +18,7 @@ pub struct MetadataStruct {
  
 pub struct DescriptorStruct {
     pub keypoints : Vec<cv::feature::akaze::KeyPoint>,
-    pub descriptors : Vec<cv::bitarray::BitArray<64>>,
-    pub method : String
+    pub descriptors : Vec<cv::bitarray::BitArray<64>>
 }
 
 pub struct ImageStruct {
@@ -85,7 +88,6 @@ impl ImageStruct {
         // Descriptor information, handling the Option
         match &self.descriptor {
             Some(descriptor) => {
-                println!("Descriptor Method: {}", descriptor.method);
                 println!("Number of Keypoints: {}", descriptor.keypoints.len());
                 println!("Number of Descriptors: {}", descriptor.descriptors.len());
             },
@@ -97,58 +99,39 @@ impl ImageStruct {
         // add additional println! statements here following the patterns above.
     }
 
-    pub fn process(&mut self) {
+    pub fn process(&mut self, scaling_ratio: f32, scaling_filter: &ScalingFilter) -> Result<(), String> {
         
-        match ImageStruct::scale(self.img_raw.clone()) {
+        match ImageStruct::scale(scaling_ratio, scaling_filter, self.img_raw.clone()) {
             Ok(scaled_image) => {
                 match ImageStruct::grayscale(scaled_image) {
                     Ok(greyscale_image) => {
                         self.img_processed = Some(greyscale_image);
+                        Ok(())
                     },
-                    Err(err) => eprintln!("Error grayscaling image: {}", err),
+                    Err(err) => Err(format!("Error grayscaling image: {}", err)),
                 }
             },
-            Err(err) => eprintln!("Error scaling image: {}", err),
+            Err(err) => Err(format!("Error scaling image: {}", err)), 
         }
-    }
-
-    pub fn compute(&mut self) -> Result<(), String> {
-        let akaze = cv::feature::akaze::Akaze::default();
-
-        // Ensure img_processed is Some; otherwise return an Err
-        let image = match &self.img_processed {
-            Some(image) => image,
-            None => return Err("img_processed is None".to_string()),
-        };
-
-        // Proceed with the computation since we now have an image
-        let (keypoints, descriptors) = akaze.extract(image);
-
-        let descriptor = DescriptorStruct {
-            keypoints,
-            descriptors,
-            method: "AKAZE".to_string(),
-        };
-        self.descriptor = Some(descriptor);
-
-        Ok(())
     }
 
     fn grayscale(image: DynamicImage) -> Result<DynamicImage, image::ImageError> {
         Ok(image.grayscale())
     }
 
-    fn scale(image: DynamicImage) -> Result<DynamicImage, image::ImageError> {
-        let ratio = 0.5;
+    fn scale(scaling_ratio: f32, scaling_filter: &ScalingFilter, image: DynamicImage) -> Result<DynamicImage, image::ImageError> {
         let original_width = image.width();
         let original_height = image.height();
+        let new_width = (original_width as f32 * scaling_ratio) as u32;
+        let new_height = (original_height as f32 * scaling_ratio) as u32;
     
-        // Calculate new dimensions based on the provided ratio
-        let new_width = (original_width as f32 * ratio) as u32;
-        let new_height = (original_height as f32 * ratio) as u32;
+        let filter_type = match scaling_filter {
+            ScalingFilter::Triangle => image::imageops::FilterType::Triangle,
+            ScalingFilter::CatmullRom => image::imageops::FilterType::CatmullRom,
+            ScalingFilter::Lanczos3 => image::imageops::FilterType::Lanczos3,
+        };
     
-        // Resize the image using the new dimensions
-        Ok(image.resize(new_width, new_height, image::imageops::FilterType::Triangle))
+        Ok(image.resize(new_width, new_height, filter_type))
     }
 
     pub fn draw(&mut self) -> Result<(), String> {  
@@ -181,11 +164,35 @@ impl ImageStruct {
         Ok(())
     }
 
+    pub fn compute(&mut self, akaze_type: &AkazeType) -> Result<(), String> {
+        let akaze = match akaze_type {
+            AkazeType::Spare => cv::feature::akaze::Akaze::sparse(),
+            AkazeType::Default => cv::feature::akaze::Akaze::default(),
+            AkazeType::Dense => cv::feature::akaze::Akaze::dense(),
+        };
+
+        // Ensure img_processed is Some; otherwise return an Err
+        let image = match &self.img_processed {
+            Some(image) => image,
+            None => return Err("img_processed is None".to_string()),
+        };
+
+        // Proceed with the computation since we now have an image
+        let (keypoints, descriptors) = akaze.extract(image);
+
+        let descriptor = DescriptorStruct {
+            keypoints,
+            descriptors
+        };
+        self.descriptor = Some(descriptor);
+
+        Ok(())
+    }
 
     pub fn save(&self) -> Result<(), String> {
         let output_name = self.name.clone();
         output_name.splitn(2, ".").next().unwrap_or("");
-        let output_path = Path::new("C:/Users/Raphael_Gerth/Documents/HOME/FUNTIMES_Rust/photogrametry/output").join(output_name).with_extension("png");
+        let output_path = Path::new("../../output").join(output_name).with_extension("png");
         println!("Image saved at {}", output_path.display());
         match &self.img_processed {
             Some(image) => {
@@ -200,3 +207,4 @@ impl ImageStruct {
     }
 }
 
+ 

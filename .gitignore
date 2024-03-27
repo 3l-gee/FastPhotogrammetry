@@ -15,7 +15,8 @@ venv/
 .cmd
 
 #folder old
-old/
+/old
+/prot
 
 #rust
 /target

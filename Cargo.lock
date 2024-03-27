@@ -3,6 +3,16 @@
 version = 3
 
 [[package]]
+name = "FastPhotogrammetry"
+version = "0.1.0"
+dependencies = [
+ "cv",
+ "image",
+ "rayon",
+ "uuid",
+]
+
+[[package]]
 name = "ab_glyph_rasterizer"
 version = "0.1.8"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -714,15 +724,6 @@ name = "paste"
 version = "1.0.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "de3145af08024dea9fa9914f381a17b8fc6034dfb00f3a84013f7ff43f29ed4c"
-
-[[package]]
-name = "photogrametry"
-version = "0.1.0"
-dependencies = [
- "cv",
- "image",
- "uuid",
-]
 
 [[package]]
 name = "png"

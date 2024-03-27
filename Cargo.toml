@@ -1,5 +1,5 @@
 [package]
-name = "photogrametry"
+name = "FastPhotogrammetry"
 version = "0.1.0"
 edition = "2021"
 
@@ -8,6 +8,7 @@ edition = "2021"
 [dependencies]
 image = "0.24.1"
 cv = { path = "cv-main/cv" }
+rayon = "1.5"
 
 [dependencies.uuid]
 version = "1.8.0"
@@ -24,3 +25,6 @@ codegen-units = 1
 lto = "fat"
 panic = "abort"
 overflow-checks = false
+
+#For FlameGraph only
+debug = true
